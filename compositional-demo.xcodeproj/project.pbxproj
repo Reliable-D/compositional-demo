@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,6 +14,11 @@
 		0C04A4F72EB4E733004923F1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0C04A4F62EB4E733004923F1 /* Assets.xcassets */; };
 		0C04A4FA2EB4E733004923F1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0C04A4F82EB4E733004923F1 /* LaunchScreen.storyboard */; };
 		0C04A4FD2EB4E733004923F1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C04A4FC2EB4E733004923F1 /* main.m */; };
+		0C04A5052EB4E905004923F1 /* CPDCompositionalLayoutController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C04A5042EB4E905004923F1 /* CPDCompositionalLayoutController.m */; };
+		0C04A5082EB4F18D004923F1 /* CPDCompositionalLayoutBannerCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C04A5072EB4F18D004923F1 /* CPDCompositionalLayoutBannerCell.m */; };
+		0C04A50B2EB4F19D004923F1 /* CPDCompositionalLayoutNormalCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C04A50A2EB4F19D004923F1 /* CPDCompositionalLayoutNormalCell.m */; };
+		0C04A50E2EB5024C004923F1 /* CPDCompositionalLayoutGroupCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C04A50D2EB5024C004923F1 /* CPDCompositionalLayoutGroupCell.m */; };
+		0C04A5112EB50293004923F1 /* CPDCompositionalGroupObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C04A5102EB50293004923F1 /* CPDCompositionalGroupObject.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +34,16 @@
 		0C04A4F92EB4E733004923F1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0C04A4FB2EB4E733004923F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0C04A4FC2EB4E733004923F1 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		0C04A5032EB4E905004923F1 /* CPDCompositionalLayoutController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPDCompositionalLayoutController.h; sourceTree = "<group>"; };
+		0C04A5042EB4E905004923F1 /* CPDCompositionalLayoutController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPDCompositionalLayoutController.m; sourceTree = "<group>"; };
+		0C04A5062EB4F18D004923F1 /* CPDCompositionalLayoutBannerCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPDCompositionalLayoutBannerCell.h; sourceTree = "<group>"; };
+		0C04A5072EB4F18D004923F1 /* CPDCompositionalLayoutBannerCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPDCompositionalLayoutBannerCell.m; sourceTree = "<group>"; };
+		0C04A5092EB4F19D004923F1 /* CPDCompositionalLayoutNormalCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPDCompositionalLayoutNormalCell.h; sourceTree = "<group>"; };
+		0C04A50A2EB4F19D004923F1 /* CPDCompositionalLayoutNormalCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPDCompositionalLayoutNormalCell.m; sourceTree = "<group>"; };
+		0C04A50C2EB5024C004923F1 /* CPDCompositionalLayoutGroupCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPDCompositionalLayoutGroupCell.h; sourceTree = "<group>"; };
+		0C04A50D2EB5024C004923F1 /* CPDCompositionalLayoutGroupCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPDCompositionalLayoutGroupCell.m; sourceTree = "<group>"; };
+		0C04A50F2EB50293004923F1 /* CPDCompositionalGroupObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPDCompositionalGroupObject.h; sourceTree = "<group>"; };
+		0C04A5102EB50293004923F1 /* CPDCompositionalGroupObject.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPDCompositionalGroupObject.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +82,16 @@
 				0C04A4EE2EB4E730004923F1 /* SceneDelegate.m */,
 				0C04A4F02EB4E730004923F1 /* ViewController.h */,
 				0C04A4F12EB4E730004923F1 /* ViewController.m */,
+				0C04A5032EB4E905004923F1 /* CPDCompositionalLayoutController.h */,
+				0C04A5042EB4E905004923F1 /* CPDCompositionalLayoutController.m */,
+				0C04A5062EB4F18D004923F1 /* CPDCompositionalLayoutBannerCell.h */,
+				0C04A5072EB4F18D004923F1 /* CPDCompositionalLayoutBannerCell.m */,
+				0C04A5092EB4F19D004923F1 /* CPDCompositionalLayoutNormalCell.h */,
+				0C04A50A2EB4F19D004923F1 /* CPDCompositionalLayoutNormalCell.m */,
+				0C04A50C2EB5024C004923F1 /* CPDCompositionalLayoutGroupCell.h */,
+				0C04A50D2EB5024C004923F1 /* CPDCompositionalLayoutGroupCell.m */,
+				0C04A50F2EB50293004923F1 /* CPDCompositionalGroupObject.h */,
+				0C04A5102EB50293004923F1 /* CPDCompositionalGroupObject.m */,
 				0C04A4F32EB4E730004923F1 /* Main.storyboard */,
 				0C04A4F62EB4E733004923F1 /* Assets.xcassets */,
 				0C04A4F82EB4E733004923F1 /* LaunchScreen.storyboard */,
@@ -103,6 +128,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
+				CLASSPREFIX = CPD;
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
 					0C04A4E62EB4E730004923F1 = {
@@ -111,7 +137,7 @@
 				};
 			};
 			buildConfigurationList = 0C04A4E22EB4E730004923F1 /* Build configuration list for PBXProject "compositional-demo" */;
-			compatibilityVersion = "Xcode 14.0";
+			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -149,7 +175,12 @@
 				0C04A4F22EB4E730004923F1 /* ViewController.m in Sources */,
 				0C04A4EC2EB4E730004923F1 /* AppDelegate.m in Sources */,
 				0C04A4FD2EB4E733004923F1 /* main.m in Sources */,
+				0C04A5112EB50293004923F1 /* CPDCompositionalGroupObject.m in Sources */,
+				0C04A5052EB4E905004923F1 /* CPDCompositionalLayoutController.m in Sources */,
 				0C04A4EF2EB4E730004923F1 /* SceneDelegate.m in Sources */,
+				0C04A50E2EB5024C004923F1 /* CPDCompositionalLayoutGroupCell.m in Sources */,
+				0C04A50B2EB4F19D004923F1 /* CPDCompositionalLayoutNormalCell.m in Sources */,
+				0C04A5082EB4F18D004923F1 /* CPDCompositionalLayoutBannerCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
