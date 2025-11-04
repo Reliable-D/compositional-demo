@@ -11,13 +11,99 @@
 #import "CPDCompositionalLayoutGroupCell.h"
 #import "CPDCompositionalGroupObject.h"
 
-@interface CPDCompositionalLayoutController ()<UICollectionViewDataSource,UICollectionViewDelegate>
+// 定义Section标识符类型
+typedef NS_ENUM(NSInteger, CPDCompositionalSectionType) {
+    CPDCompositionalSectionTypeBanner = 0,
+    CPDCompositionalSectionTypeNormal2x2,
+    CPDCompositionalSectionTypeGroup,
+    CPDCompositionalSectionTypeNormal1x2
+};
+
+// 定义Section标识符（需要遵循NSCopying）
+@interface CPDCompositionalSection : NSObject <NSCopying>
+@property (nonatomic, assign) CPDCompositionalSectionType type;
+- (instancetype)initWithType:(CPDCompositionalSectionType)type;
+@end
+
+// 定义Item标识符（需要遵循NSCopying）
+@interface CPDCompositionalItem : NSObject <NSCopying>
+@property (nonatomic, strong) id data;
+@property (nonatomic, assign) CPDCompositionalSectionType sectionType;
+@property (nonatomic, strong) NSUUID *uniqueIdentifier; // 确保每个item唯一
+- (instancetype)initWithData:(id)data sectionType:(CPDCompositionalSectionType)sectionType;
+@end
+
+@implementation CPDCompositionalSection
+
+- (instancetype)initWithType:(CPDCompositionalSectionType)type {
+    self = [super init];
+    if (self) {
+        _type = type;
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone *)zone {
+    CPDCompositionalSection *copy = [[CPDCompositionalSection allocWithZone:zone] initWithType:self.type];
+    return copy;
+}
+
+- (BOOL)isEqual:(id)object {
+    if (self == object) {
+        return YES;
+    }
+    if (![object isKindOfClass:[CPDCompositionalSection class]]) {
+        return NO;
+    }
+    return self.type == ((CPDCompositionalSection *)object).type;
+}
+
+- (NSUInteger)hash {
+    return self.type;
+}
+
+@end
+
+@implementation CPDCompositionalItem
+
+- (instancetype)initWithData:(id)data sectionType:(CPDCompositionalSectionType)sectionType {
+    self = [super init];
+    if (self) {
+        _data = data;
+        _sectionType = sectionType;
+        _uniqueIdentifier = [NSUUID UUID];
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone *)zone {
+    CPDCompositionalItem *copy = [[CPDCompositionalItem allocWithZone:zone] initWithData:self.data sectionType:self.sectionType];
+    copy.uniqueIdentifier = self.uniqueIdentifier;
+    return copy;
+}
+
+- (BOOL)isEqual:(id)object {
+    if (self == object) {
+        return YES;
+    }
+    if (![object isKindOfClass:[CPDCompositionalItem class]]) {
+        return NO;
+    }
+    CPDCompositionalItem *other = (CPDCompositionalItem *)object;
+    // 使用uniqueIdentifier来确保唯一性
+    return [self.uniqueIdentifier isEqual:other.uniqueIdentifier];
+}
+
+- (NSUInteger)hash {
+    return [self.uniqueIdentifier hash];
+}
+
+@end
+
+@interface CPDCompositionalLayoutController ()<UICollectionViewDelegate>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
-@property (nonatomic, strong) NSMutableArray<NSString *> *bannerArray;
-@property (nonatomic, strong) NSMutableArray *section1DataArray;
-@property (nonatomic, strong) NSMutableArray<CPDCompositionalGroupObject *> *section2DataArray;
-@property (nonatomic, strong) NSMutableArray *section3DataArray;
+@property (nonatomic, strong) UICollectionViewDiffableDataSource<CPDCompositionalSection *, CPDCompositionalItem *> *dataSource;
 @end
 
 @implementation CPDCompositionalLayoutController
@@ -26,17 +112,9 @@
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
     
-    _bannerArray = [NSMutableArray arrayWithObjects:@"",@"",@"",@"",@"", nil];
-    _section1DataArray = [NSMutableArray arrayWithObjects:@"",@"",@"",@"",@"",@"",@"",@"",@"",@"",@"",@"", nil];
-    NSMutableArray<CPDCompositionalGroupObject *> *array = [NSMutableArray array];
-    for (int i = 0; i < 4; i++) {
-        [array addObject:[CPDCompositionalGroupObject new]];
-    }
-    _section2DataArray = array;
-    
-    _section3DataArray = [NSMutableArray arrayWithObjects:@"",@"",@"",@"",@"",@"",@"",@"",@"",@"", nil];
-    
     [self setupUI];
+    [self configureDataSource];
+    [self loadInitialData];
 }
 
 - (void)setupUI {
@@ -55,14 +133,105 @@
     [_collectionView registerClass:[CPDCompositionalLayoutNormalCell class] forCellWithReuseIdentifier:@"CPDCompositionalLayoutNormalCell"];
     [_collectionView registerClass:[CPDCompositionalLayoutGroupCell class] forCellWithReuseIdentifier:@"CPDCompositionalLayoutGroupCell"];
     _collectionView.delegate = self;
-    _collectionView.dataSource = self;
+}
+
+- (void)configureDataSource {
+    __weak typeof(self) weakSelf = self;
+    self.dataSource = [[UICollectionViewDiffableDataSource alloc] initWithCollectionView:self.collectionView cellProvider:^UICollectionViewCell * _Nullable(UICollectionView * _Nonnull collectionView, NSIndexPath * _Nonnull indexPath, CPDCompositionalItem * _Nonnull itemIdentifier) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) {
+            return nil;
+        }
+        
+        if (itemIdentifier.sectionType == CPDCompositionalSectionTypeBanner) {
+            CPDCompositionalLayoutBannerCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPDCompositionalLayoutBannerCell" forIndexPath:indexPath];
+            return cell;
+        } else if (itemIdentifier.sectionType == CPDCompositionalSectionTypeNormal2x2) {
+            CPDCompositionalLayoutNormalCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPDCompositionalLayoutNormalCell" forIndexPath:indexPath];
+            cell.backgroundColor = [UIColor redColor];
+            return cell;
+        } else if (itemIdentifier.sectionType == CPDCompositionalSectionTypeGroup) {
+            CPDCompositionalLayoutGroupCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPDCompositionalLayoutGroupCell" forIndexPath:indexPath];
+            return cell;
+        } else { // CPDCompositionalSectionTypeNormal1x2
+            CPDCompositionalLayoutNormalCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPDCompositionalLayoutNormalCell" forIndexPath:indexPath];
+            return cell;
+        }
+    }];
+}
+
+- (void)loadInitialData {
+    NSDiffableDataSourceSnapshot<CPDCompositionalSection *, CPDCompositionalItem *> *snapshot = [[NSDiffableDataSourceSnapshot alloc] init];
+    
+    // Section 0: Banner
+    CPDCompositionalSection *bannerSection = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeBanner];
+    [snapshot appendSectionsWithIdentifiers:@[bannerSection]];
+    NSMutableArray<CPDCompositionalItem *> *bannerItems = [NSMutableArray array];
+    for (int i = 0; i < 5; i++) {
+        CPDCompositionalItem *item = [[CPDCompositionalItem alloc] initWithData:@"" sectionType:CPDCompositionalSectionTypeBanner];
+        [bannerItems addObject:item];
+    }
+    [snapshot appendItemsWithIdentifiers:bannerItems intoSectionWithIdentifier:bannerSection];
+    
+    // Section 1: Normal 2x2
+    CPDCompositionalSection *normal2x2Section = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeNormal2x2];
+    [snapshot appendSectionsWithIdentifiers:@[normal2x2Section]];
+    NSMutableArray<CPDCompositionalItem *> *normal2x2Items = [NSMutableArray array];
+    for (int i = 0; i < 12; i++) {
+        CPDCompositionalItem *item = [[CPDCompositionalItem alloc] initWithData:@"" sectionType:CPDCompositionalSectionTypeNormal2x2];
+        [normal2x2Items addObject:item];
+    }
+    [snapshot appendItemsWithIdentifiers:normal2x2Items intoSectionWithIdentifier:normal2x2Section];
+    
+    // Section 2: Group
+    CPDCompositionalSection *groupSection = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeGroup];
+    [snapshot appendSectionsWithIdentifiers:@[groupSection]];
+    NSMutableArray<CPDCompositionalItem *> *groupItems = [NSMutableArray array];
+    for (int i = 0; i < 4; i++) {
+        CPDCompositionalGroupObject *groupObject = [[CPDCompositionalGroupObject alloc] init];
+        CPDCompositionalItem *item = [[CPDCompositionalItem alloc] initWithData:groupObject sectionType:CPDCompositionalSectionTypeGroup];
+        [groupItems addObject:item];
+    }
+    [snapshot appendItemsWithIdentifiers:groupItems intoSectionWithIdentifier:groupSection];
+    
+    // Section 3: Normal 1x2
+    CPDCompositionalSection *normal1x2Section = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeNormal1x2];
+    [snapshot appendSectionsWithIdentifiers:@[normal1x2Section]];
+    NSMutableArray<CPDCompositionalItem *> *normal1x2Items = [NSMutableArray array];
+    for (int i = 0; i < 10; i++) {
+        CPDCompositionalItem *item = [[CPDCompositionalItem alloc] initWithData:@"" sectionType:CPDCompositionalSectionTypeNormal1x2];
+        [normal1x2Items addObject:item];
+    }
+    [snapshot appendItemsWithIdentifiers:normal1x2Items intoSectionWithIdentifier:normal1x2Section];
+    
+    [self.dataSource applySnapshot:snapshot animatingDifferences:NO];
 }
 
 - (UICollectionViewCompositionalLayout *)createLayout {
     UICollectionViewCompositionalLayoutConfiguration *layoutConfig = [UICollectionViewCompositionalLayoutConfiguration new];
     
     UICollectionViewCompositionalLayout *layout = [[UICollectionViewCompositionalLayout alloc] initWithSectionProvider:^NSCollectionLayoutSection * _Nullable(NSInteger sectionIndex, id<NSCollectionLayoutEnvironment>  _Nonnull layoutEnvironment) {
-        if (sectionIndex == 0) {
+        // 使用dataSource获取section identifier
+        // 如果dataSource还未初始化，使用sectionIndex作为fallback
+        CPDCompositionalSectionType sectionType;
+        
+        if (self.dataSource) {
+            NSDiffableDataSourceSnapshot<CPDCompositionalSection *, CPDCompositionalItem *> *snapshot = self.dataSource.snapshot;
+            NSArray<CPDCompositionalSection *> *sections = snapshot.sectionIdentifiers;
+            
+            if (sectionIndex < sections.count) {
+                CPDCompositionalSection *sectionIdentifier = sections[sectionIndex];
+                sectionType = sectionIdentifier.type;
+            } else {
+                // 如果sectionIndex超出范围，使用默认值
+                sectionType = (CPDCompositionalSectionType)sectionIndex;
+            }
+        } else {
+            // dataSource未初始化时，使用sectionIndex作为类型
+            sectionType = (CPDCompositionalSectionType)sectionIndex;
+        }
+        
+        if (sectionType == CPDCompositionalSectionTypeBanner) {
             // Group 的方向可以是横向(horizontalGroup)或纵向(verticalGroup)
             // horizontalGroup: items 在 Group 内横向排列
             // verticalGroup: items 在 Group 内纵向排列
@@ -88,7 +257,7 @@
             // 设置 section 的内容边距
             section.contentInsets = NSDirectionalEdgeInsetsMake(10, 10, 10, 10);
             return section;
-        }else if (sectionIndex == 1) { // normal, 一个group,2行2列，且横向滑动
+        } else if (sectionType == CPDCompositionalSectionTypeNormal2x2) { // normal, 一个group,2行2列，且横向滑动
             // ========== 嵌套 Group 实现 2行2列 ==========
             // 
             // 【布局结构】
@@ -135,7 +304,7 @@
             section.contentInsets = NSDirectionalEdgeInsetsMake(10, 10, 10, 10);
             
             return section;
-        } else if (sectionIndex == 2) {
+        } else if (sectionType == CPDCompositionalSectionTypeGroup) {
             NSCollectionLayoutSize *topItemSize = [NSCollectionLayoutSize sizeWithWidthDimension:[NSCollectionLayoutDimension fractionalWidthDimension:1] heightDimension:[NSCollectionLayoutDimension absoluteDimension:44]];
             NSCollectionLayoutItem *topItem = [NSCollectionLayoutItem itemWithLayoutSize:topItemSize];
 
@@ -149,7 +318,7 @@
             section.interGroupSpacing = 10;
             section.contentInsets = NSDirectionalEdgeInsetsMake(0, 0, 0, 0);
             return section;
-        } else {
+        } else { // CPDCompositionalSectionTypeNormal1x2
             // ========== Compositional Layout 详细解释 ==========
             // 
             // 【核心概念】
@@ -205,41 +374,7 @@
     return layout;
 }
 
-#pragma makr - UICollectionViewDataSource
-- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
-    return 4;
-}
-
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    if (section == 0) { // banner
-        return self.bannerArray.count;
-    } else if (section == 1) { // normal, 一个group,2行2列
-        return self.section1DataArray.count;
-    } else if (section == 2) {
-        return self.section2DataArray.count;
-    } else {
-        return self.section3DataArray.count; // normal, 1行2列
-    }
-}
-
-- (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) { // banner
-        CPDCompositionalLayoutBannerCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPDCompositionalLayoutBannerCell" forIndexPath:indexPath];
-        return cell;
-    } else if (indexPath.section == 1) { // normal, 一个group,2行2列
-        CPDCompositionalLayoutNormalCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPDCompositionalLayoutNormalCell" forIndexPath:indexPath];
-        cell.backgroundColor = [UIColor redColor];
-        return cell;
-    } else if (indexPath.section == 2) { //
-        CPDCompositionalLayoutGroupCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPDCompositionalLayoutGroupCell" forIndexPath:indexPath];
-        return cell;
-    } else { // normal, 1行2列
-        CPDCompositionalLayoutNormalCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPDCompositionalLayoutNormalCell" forIndexPath:indexPath];
-        return cell;
-    }
-}
-
-#pragma makr - UICollectionViewDelegate
+#pragma mark - UICollectionViewDelegate
 
 
 
