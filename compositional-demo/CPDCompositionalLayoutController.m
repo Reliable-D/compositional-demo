@@ -104,6 +104,9 @@ typedef NS_ENUM(NSInteger, CPDCompositionalSectionType) {
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) UICollectionViewDiffableDataSource<CPDCompositionalSection *, CPDCompositionalItem *> *dataSource;
+@property (nonatomic, strong) UIRefreshControl *refreshControl;
+// 保存所有可能的 section 对象，确保即使 section 被隐藏也能在新数据到来时恢复
+@property (nonatomic, strong) NSArray<CPDCompositionalSection *> *allSections;
 @end
 
 @implementation CPDCompositionalLayoutController
@@ -133,6 +136,12 @@ typedef NS_ENUM(NSInteger, CPDCompositionalSectionType) {
     [_collectionView registerClass:[CPDCompositionalLayoutNormalCell class] forCellWithReuseIdentifier:@"CPDCompositionalLayoutNormalCell"];
     [_collectionView registerClass:[CPDCompositionalLayoutGroupCell class] forCellWithReuseIdentifier:@"CPDCompositionalLayoutGroupCell"];
     _collectionView.delegate = self;
+    
+    // 添加下拉刷新控件
+    _refreshControl = [[UIRefreshControl alloc] init];
+    _refreshControl.attributedTitle = [[NSAttributedString alloc] initWithString:@"下拉刷新"];
+    [_refreshControl addTarget:self action:@selector(handleRefresh:) forControlEvents:UIControlEventValueChanged];
+    _collectionView.refreshControl = _refreshControl;
 }
 
 - (void)configureDataSource {
@@ -161,10 +170,17 @@ typedef NS_ENUM(NSInteger, CPDCompositionalSectionType) {
 }
 
 - (void)loadInitialData {
+    // 创建并保存所有可能的 section 对象
+    CPDCompositionalSection *bannerSection = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeBanner];
+    CPDCompositionalSection *normal2x2Section = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeNormal2x2];
+    CPDCompositionalSection *groupSection = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeGroup];
+    CPDCompositionalSection *normal1x2Section = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeNormal1x2];
+    
+    self.allSections = @[bannerSection, normal2x2Section, groupSection, normal1x2Section];
+    
     NSDiffableDataSourceSnapshot<CPDCompositionalSection *, CPDCompositionalItem *> *snapshot = [[NSDiffableDataSourceSnapshot alloc] init];
     
     // Section 0: Banner
-    CPDCompositionalSection *bannerSection = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeBanner];
     [snapshot appendSectionsWithIdentifiers:@[bannerSection]];
     NSMutableArray<CPDCompositionalItem *> *bannerItems = [NSMutableArray array];
     for (int i = 0; i < 5; i++) {
@@ -174,7 +190,6 @@ typedef NS_ENUM(NSInteger, CPDCompositionalSectionType) {
     [snapshot appendItemsWithIdentifiers:bannerItems intoSectionWithIdentifier:bannerSection];
     
     // Section 1: Normal 2x2
-    CPDCompositionalSection *normal2x2Section = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeNormal2x2];
     [snapshot appendSectionsWithIdentifiers:@[normal2x2Section]];
     NSMutableArray<CPDCompositionalItem *> *normal2x2Items = [NSMutableArray array];
     for (int i = 0; i < 12; i++) {
@@ -184,7 +199,6 @@ typedef NS_ENUM(NSInteger, CPDCompositionalSectionType) {
     [snapshot appendItemsWithIdentifiers:normal2x2Items intoSectionWithIdentifier:normal2x2Section];
     
     // Section 2: Group
-    CPDCompositionalSection *groupSection = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeGroup];
     [snapshot appendSectionsWithIdentifiers:@[groupSection]];
     NSMutableArray<CPDCompositionalItem *> *groupItems = [NSMutableArray array];
     for (int i = 0; i < 4; i++) {
@@ -195,7 +209,6 @@ typedef NS_ENUM(NSInteger, CPDCompositionalSectionType) {
     [snapshot appendItemsWithIdentifiers:groupItems intoSectionWithIdentifier:groupSection];
     
     // Section 3: Normal 1x2
-    CPDCompositionalSection *normal1x2Section = [[CPDCompositionalSection alloc] initWithType:CPDCompositionalSectionTypeNormal1x2];
     [snapshot appendSectionsWithIdentifiers:@[normal1x2Section]];
     NSMutableArray<CPDCompositionalItem *> *normal1x2Items = [NSMutableArray array];
     for (int i = 0; i < 10; i++) {
@@ -205,6 +218,88 @@ typedef NS_ENUM(NSInteger, CPDCompositionalSectionType) {
     [snapshot appendItemsWithIdentifiers:normal1x2Items intoSectionWithIdentifier:normal1x2Section];
     
     [self.dataSource applySnapshot:snapshot animatingDifferences:NO];
+}
+
+- (void)handleRefresh:(UIRefreshControl *)refreshControl {
+    // 模拟网络请求
+    [self fetchNewDataWithCompletion:^{
+        // 网络请求完成后，停止刷新动画
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [refreshControl endRefreshing];
+        });
+    }];
+}
+
+- (void)fetchNewDataWithCompletion:(void(^)(void))completion {
+    // 模拟网络请求延迟（1-2秒）
+    NSTimeInterval delay = arc4random_uniform(1000) / 1000.0 + 1.0; // 1.0-2.0秒
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // 在主线程更新UI
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self updateDataWithRandomCount];
+            
+            if (completion) {
+                completion();
+            }
+        });
+    });
+}
+
+- (void)updateDataWithRandomCount {
+    // 创建新的snapshot
+    NSDiffableDataSourceSnapshot<CPDCompositionalSection *, CPDCompositionalItem *> *snapshot = [[NSDiffableDataSourceSnapshot alloc] init];
+    
+    // 使用保存的所有 section 对象，而不是从当前 snapshot 获取
+    // 这样可以确保即使某个 section 之前被隐藏（count=0），新数据到来时也能恢复显示
+    NSArray<CPDCompositionalSection *> *sections = self.allSections;
+    
+    // 为每个section生成随机数量的新数据
+    for (CPDCompositionalSection *section in sections) {
+        NSInteger randomCount = 0;
+        NSMutableArray<CPDCompositionalItem *> *newItems = [NSMutableArray array];
+        
+        if (section.type == CPDCompositionalSectionTypeBanner) {
+            // Banner section: 0-8个（允许为0）
+            randomCount = arc4random_uniform(9); // 0-8
+            for (NSInteger i = 0; i < randomCount; i++) {
+                CPDCompositionalItem *item = [[CPDCompositionalItem alloc] initWithData:@"" sectionType:CPDCompositionalSectionTypeBanner];
+                [newItems addObject:item];
+            }
+        } else if (section.type == CPDCompositionalSectionTypeNormal2x2) {
+            // Normal 2x2 section: 0-15个（允许为0）
+            randomCount = arc4random_uniform(16); // 0-15
+            for (NSInteger i = 0; i < randomCount; i++) {
+                CPDCompositionalItem *item = [[CPDCompositionalItem alloc] initWithData:@"" sectionType:CPDCompositionalSectionTypeNormal2x2];
+                [newItems addObject:item];
+            }
+        } else if (section.type == CPDCompositionalSectionTypeGroup) {
+            // Group section: 0-6个（允许为0）
+            randomCount = arc4random_uniform(7); // 0-6
+            for (NSInteger i = 0; i < randomCount; i++) {
+                CPDCompositionalGroupObject *groupObject = [[CPDCompositionalGroupObject alloc] init];
+                CPDCompositionalItem *item = [[CPDCompositionalItem alloc] initWithData:groupObject sectionType:CPDCompositionalSectionTypeGroup];
+                [newItems addObject:item];
+            }
+        } else if (section.type == CPDCompositionalSectionTypeNormal1x2) {
+            // Normal 1x2 section: 0-15个（允许为0）
+            randomCount = arc4random_uniform(16); // 0-15
+            for (NSInteger i = 0; i < randomCount; i++) {
+                CPDCompositionalItem *item = [[CPDCompositionalItem alloc] initWithData:@"" sectionType:CPDCompositionalSectionTypeNormal1x2];
+                [newItems addObject:item];
+            }
+        }
+        
+        // 只有当 items 数量 > 0 时才添加 section 和 items
+        // 如果 count 为 0，则不添加该 section，这样就不会显示空 section
+        if (newItems.count > 0) {
+            [snapshot appendSectionsWithIdentifiers:@[section]];
+            [snapshot appendItemsWithIdentifiers:newItems intoSectionWithIdentifier:section];
+        }
+    }
+    
+    // 应用新的snapshot，带动画效果
+    [self.dataSource applySnapshot:snapshot animatingDifferences:YES];
 }
 
 - (UICollectionViewCompositionalLayout *)createLayout {
