@@ -14,8 +14,10 @@
 @interface CPDCompositionalLayoutController ()<UICollectionViewDataSource,UICollectionViewDelegate>
 
 @property (nonatomic, strong) UICollectionView *collectionView;
-@property (nonatomic, strong) NSMutableArray<CPDCompositionalGroupObject *> *groupObjectList;
-
+@property (nonatomic, strong) NSMutableArray<NSString *> *bannerArray;
+@property (nonatomic, strong) NSMutableArray *section1DataArray;
+@property (nonatomic, strong) NSMutableArray<CPDCompositionalGroupObject *> *section2DataArray;
+@property (nonatomic, strong) NSMutableArray *section3DataArray;
 @end
 
 @implementation CPDCompositionalLayoutController
@@ -24,17 +26,20 @@
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
     
+    _bannerArray = [NSMutableArray arrayWithObjects:@"",@"",@"",@"",@"", nil];
+    _section1DataArray = [NSMutableArray arrayWithObjects:@"",@"",@"",@"",@"",@"",@"",@"",@"",@"",@"",@"", nil];
     NSMutableArray<CPDCompositionalGroupObject *> *array = [NSMutableArray array];
     for (int i = 0; i < 4; i++) {
         [array addObject:[CPDCompositionalGroupObject new]];
     }
-    _groupObjectList = array;
+    _section2DataArray = array;
+    
+    _section3DataArray = [NSMutableArray arrayWithObjects:@"",@"",@"",@"",@"",@"",@"",@"",@"",@"", nil];
     
     [self setupUI];
 }
 
 - (void)setupUI {
-    
     _collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds collectionViewLayout:[self createLayout]];
     [self.view addSubview:_collectionView];
     _collectionView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -207,13 +212,13 @@
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
     if (section == 0) { // banner
-        return 5;
+        return self.bannerArray.count;
     } else if (section == 1) { // normal, 一个group,2行2列
-        return 12;
+        return self.section1DataArray.count;
     } else if (section == 2) {
-        return self.groupObjectList.count;
+        return self.section2DataArray.count;
     } else {
-        return 10; // normal, 1行2列
+        return self.section3DataArray.count; // normal, 1行2列
     }
 }
 
